@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Finder Recipes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            transition: margin 0.3s ease;
+        }
+        header, footer {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            transition: height 0.3s ease, padding 0.3s ease;
+        }
+        .container {
+            margin: 20px;
+        }
+        .search-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .search-bar input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .search-bar button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .recipes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .recipe {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .recipe:hover {
+            transform: scale(1.05);
+        }
+        .recipe img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .recipe-content {
+            padding: 15px;
+        }
+        .recipe-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #ff5722;
+        }
+        .recipe-link {
+            text-decoration: none;
+            color: white;
+            background-color: #ff5722;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .recipe-link:hover {
+            background-color: #e64a19;
+        }
+    </style>
+</head>
+<body>
+    <header id="green-header">
+        <h1>DS Food Finder Recipes</h1>
+    </header>
+
+    <div class="container">
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Search for food or recipes...">
+            <button onclick="searchRecipes()">Search</button>
+        </div>
+
+        <div id="recipes-container" class="recipes">
+            <!-- Recipes will be displayed here -->
+        </div>
+    </div>
+
+    <footer id="green-footer">
+        <p>© 2024 DS Studio. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const apiKey = '6186befb0143400e918f89b450c21dca'; // Your API key
+        const apiBaseUrl = 'https://api.spoonacular.com/recipes';
+        let recipeOffset = 0; // Track offset for infinite scroll
+
+        // Fetch and display random recipes on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchRandomRecipes();
+        });
+
+        // Function to fetch random recipes
+        function fetchRandomRecipes() {
+            fetch(`${apiBaseUrl}/random?apiKey=${apiKey}&number=6`)
+                .then(response => response.json())
+                .then(data => {
+                    displayRecipes(data.recipes);
+                })
+                .catch(error => console.error('Error fetching random recipes:', error));
+        }
+
+        // Function to search recipes by user input
+        function searchRecipes() {
+            const query = document.getElementById('search-input').value;
+            if (query) {
+                fetch(`${apiBaseUrl}/complexSearch?apiKey=${apiKey}&query=${query}&number=6&offset=${recipeOffset}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        displayRecipes(data.results);
+                    })
+                    .catch(error => console.error('Error searching recipes:', error));
+            }
+        }
+
+        // Function to display recipes in the container
+        function displayRecipes(recipes) {
+            const recipesContainer = document.getElementById('recipes-container');
+            recipesContainer.innerHTML = ''; // Clear previous recipes
+
+            recipes.forEach(recipe => {
+                const recipeCard = document.createElement('div');
+                recipeCard.classList.add('recipe');
+
+                recipeCard.innerHTML = `
+                    <img src="${recipe.image}" alt="${recipe.title}">
+                    <div class="recipe-content">
+                        <h2 class="recipe-title">${recipe.title}</h2>
+                        <a href="https://spoonacular.com/recipes/${recipe.title.replace(/ /g, '-')}-${recipe.id}" class="recipe-link" onclick="hideHeaderFooter(event)">View Recipe</a>
+                    </div>
+                `;
+
+                recipesContainer.appendChild(recipeCard);
+            });
+        }
+
+        // Function to hide unwanted header and footer when viewing a recipe
+        function hideHeaderFooter(event) {
+            event.preventDefault(); // Prevent the default link behavior
+            const header = document.getElementById('green-header');
+            const footer = document.getElementById('green-footer');
+
+            // Hide header and footer
+            header.style.display = 'none';
+            footer.style.display = 'none';
+
+            // Adjust body padding to simulate cutting off the top and bottom
+            document.body.style.paddingTop = '0';
+            document.body.style.paddingBottom = '0';
+
+            // Redirect to the external link after hiding the header and footer
+            const recipeLink = event.target.href;
+            window.location.href = recipeLink; // Redirect to the recipe link
+        }
+
+        // Infinite scroll to load more recipes
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+                recipeOffset += 6; // Increase offset to fetch more recipes
+                searchRecipes(); // Fetch more recipes as the user scrolls down
+            }
+        });
+    </script>
+</body>
+</html>
