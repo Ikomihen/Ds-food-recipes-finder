@@ -10,7 +10,6 @@
             margin: 0;
             padding: 0;
             background-color: #f7f7f7;
-            transition: margin 0.3s ease;
         }
         header, footer {
             background-color: #4CAF50;
@@ -18,6 +17,9 @@
             padding: 15px;
             text-align: center;
             transition: height 0.3s ease, padding 0.3s ease;
+        }
+        .hidden {
+            display: none !important;
         }
         .container {
             margin: 20px;
@@ -84,11 +86,28 @@
         .recipe-link:hover {
             background-color: #e64a19;
         }
+        .iframe-container {
+            display: none; /* Hide the iframe initially */
+            position: fixed; /* Fix it to cover the whole viewport */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100; /* High z-index to cover everything */
+            background: rgba(255, 255, 255, 0.9); /* Optional: Add a slight background to the iframe */
+            border: none;
+            padding: 0; /* No padding */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none; /* Remove border from iframe */
+        }
     </style>
 </head>
 <body>
     <header id="green-header">
-        <h1>DS Food Finder Recipes</h1>
+        <h1>Food Finder Recipes</h1>
     </header>
 
     <div class="container">
@@ -100,10 +119,15 @@
         <div id="recipes-container" class="recipes">
             <!-- Recipes will be displayed here -->
         </div>
+        
+        <!-- Iframe for displaying recipes -->
+        <div id="iframe-container" class="iframe-container">
+            <iframe id="recipe-iframe" src=""></iframe>
+        </div>
     </div>
 
     <footer id="green-footer">
-        <p>© 2024 DS Studio. All rights reserved.</p>
+        <p>© 2024 Food Finder Recipes. All rights reserved.</p>
     </footer>
 
     <script>
@@ -142,8 +166,8 @@
         // Function to display recipes in the container
         function displayRecipes(recipes) {
             const recipesContainer = document.getElementById('recipes-container');
-            recipesContainer.innerHTML = ''; // Clear previous recipes
-
+            recipesContainer.innerHTML = ''; // Clear previous results
+            
             recipes.forEach(recipe => {
                 const recipeCard = document.createElement('div');
                 recipeCard.classList.add('recipe');
@@ -152,7 +176,7 @@
                     <img src="${recipe.image}" alt="${recipe.title}">
                     <div class="recipe-content">
                         <h2 class="recipe-title">${recipe.title}</h2>
-                        <a href="https://spoonacular.com/recipes/${recipe.title.replace(/ /g, '-')}-${recipe.id}" class="recipe-link" onclick="hideHeaderFooter(event)">View Recipe</a>
+                        <a href="#" class="recipe-link" onclick="openRecipe(${recipe.id}, '${recipe.title}')">View Recipe</a>
                     </div>
                 `;
 
@@ -160,24 +184,30 @@
             });
         }
 
-        // Function to hide unwanted header and footer when viewing a recipe
-        function hideHeaderFooter(event) {
-            event.preventDefault(); // Prevent the default link behavior
-            const header = document.getElementById('green-header');
-            const footer = document.getElementById('green-footer');
-
-            // Hide header and footer
-            header.style.display = 'none';
-            footer.style.display = 'none';
-
-            // Adjust body padding to simulate cutting off the top and bottom
-            document.body.style.paddingTop = '0';
-            document.body.style.paddingBottom = '0';
-
-            // Redirect to the external link after hiding the header and footer
-            const recipeLink = event.target.href;
-            window.location.href = recipeLink; // Redirect to the recipe link
+        // Function to open recipe in iframe and hide headers/footers
+        function openRecipe(recipeId, title) {
+            const iframe = document.getElementById('recipe-iframe');
+            const iframeContainer = document.getElementById('iframe-container');
+            iframe.src = `https://spoonacular.com/recipes/${title.replace(/ /g, '-')}-${recipeId}`;
+            iframeContainer.style.display = 'block'; // Show iframe
+            document.getElementById('green-header').classList.add('hidden'); // Hide header
+            document.getElementById('green-footer').classList.add('hidden'); // Hide footer
         }
+
+        // Function to close the iframe and show headers/footers
+        function closeIframe() {
+            const iframeContainer = document.getElementById('iframe-container');
+            iframeContainer.style.display = 'none'; // Hide iframe
+            document.getElementById('green-header').classList.remove('hidden'); // Show header
+            document.getElementById('green-footer').classList.remove('hidden'); // Show footer
+        }
+
+        // Close iframe when clicking outside of it
+        document.getElementById('iframe-container').addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) {
+                closeIframe();
+            }
+        });
 
         // Infinite scroll to load more recipes
         window.addEventListener('scroll', () => {
